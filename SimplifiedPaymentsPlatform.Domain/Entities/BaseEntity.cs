@@ -1,11 +1,10 @@
+using MongoDB.Bson.Serialization.Attributes;
+
 namespace SimplifiedPaymentsPlatform.Domain.Entities;
 
 public abstract class BaseEntity
 {
-    public Guid Id { get; set; }
-    
-    protected BaseEntity()
-    {
-        Id = Guid.NewGuid();
-    }
+    [BsonId]
+    [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
+    public string Id { get; set; }
 }
