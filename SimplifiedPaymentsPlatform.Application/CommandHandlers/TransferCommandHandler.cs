@@ -3,8 +3,8 @@ using MongoDB.Driver;
 using SimplifiedPaymentsPlatform.Application.Commands;
 using SimplifiedPaymentsPlatform.Application.Mappings;
 using SimplifiedPaymentsPlatform.Application.Services.Interface;
+using SimplifiedPaymentsPlatform.Application.Services.Validators.TransferValidator;
 using SimplifiedPaymentsPlatform.Domain.Entities;
-using SimplifiedPaymentsPlatform.Domain.Enums;
 using SimplifiedPaymentsPlatform.Domain.Repositories;
 
 namespace SimplifiedPaymentsPlatform.Application.CommandHandlers;
@@ -16,30 +16,33 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand>
     private readonly IBaseRepository _baseRepository;
     private readonly ITransferValidationService _transferValidationService;
     private readonly ITransferConfirmationService _transferConfirmationService;
+    private readonly ITransferValidator _transferValidator;
 
     public TransferCommandHandler(ITransferRepository transferRepository,
                                   IBaseRepository baseRepository,
                                   IUserRepository userRepository,
                                   ITransferValidationService transferValidationService,
-                                  ITransferConfirmationService transferConfirmationService)
+                                  ITransferConfirmationService transferConfirmationService,
+                                  ITransferValidator transferValidator)
     {
         _transferRepository = transferRepository;
         _baseRepository = baseRepository;
         _userRepository = userRepository;
         _transferValidationService = transferValidationService;
         _transferConfirmationService = transferConfirmationService;
+        _transferValidator = transferValidator;
     }
 
     public async Task Handle(TransferCommand request, CancellationToken cancellationToken)
     {
         using var session = await _baseRepository.StartSessionAsync();
+        session.StartTransaction();
 
-        await session.WithTransaction(async (sessionHandler, cancellatioToken) =>
+        try
         {
-            if (!await TransferIsValid(request))
-                throw new InvalidOperationException("Operação de transação cancelada devido a erros de validação.");
+            await _transferValidator.CheckTransferIsValid(request);
 
-            await TransferBetweenAccounts(sessionHandler, request);
+            await TransferBetweenAccounts(session, request);
 
             var authorizeTransfer = await _transferValidationService.Authorize();
 
@@ -47,12 +50,18 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand>
                 throw new Exception("Transferência não autorizada");
 
             var transfer = request.CommandToTransfer();
-            await _transferRepository.CreateWithTransactionAsync(sessionHandler, transfer);
+            await _transferRepository.CreateWithTransactionAsync(session, transfer);
 
-            await sessionHandler.CommitTransactionAsync(cancellatioToken);
-        });
-
-        await _transferConfirmationService.Confirmation(request.Value);
+            await session.CommitTransactionAsync(cancellationToken);
+            await _transferConfirmationService.Confirmation(request.Value);
+        }
+        catch (MongoWriteException ex)
+        {
+            Console.WriteLine(ex.WriteError.Message);
+            Console.WriteLine(ex.Message);
+            await session.AbortTransactionAsync();
+            throw;
+        }
     }
 
     private async Task TransferBetweenAccounts(IClientSessionHandle session, TransferCommand request)
@@ -66,7 +75,7 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand>
         payee?.Wallet.IncreaseBalance(request.Value);
 
         await Task.WhenAll(
-            UpdateWalletBalance(session, payer?.Id, payer.Wallet.AvailableBalance), 
+            UpdateWalletBalance(session, payer?.Id, payer.Wallet.AvailableBalance),
             UpdateWalletBalance(session, payee?.Id, payee.Wallet.AvailableBalance)
         );
     }
@@ -75,21 +84,10 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand>
     {
         var filterDefinition = Builders<User>.Filter.Eq(u => u.Id, userId);
 
-        var updateDefinition = 
+        var updateDefinition =
             Builders<User>.Update
                 .Set(u => u.Wallet.AvailableBalance, balance);
-        
+
         await _userRepository.UpdateWithTransactionAsync(session, filterDefinition, updateDefinition);
-    }
-
-    private async Task<bool> TransferIsValid(TransferCommand transfer)
-    {
-        var usersOfTransfer = await _userRepository.GetUsersByIds(transfer.PayerId, transfer.PayeeId);
-
-        var payer = usersOfTransfer.FirstOrDefault(u => u.Id == transfer.PayerId);
-        var payee = usersOfTransfer.FirstOrDefault(u => u.Id == transfer.PayeeId);
-
-        return transfer.PayeeId != transfer.PayerId && payer?.Type == UserType.Common &&
-               transfer.Value <= payer?.Wallet.AvailableBalance && transfer.Value > 0;
     }
 }

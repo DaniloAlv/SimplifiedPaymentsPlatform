@@ -1,5 +1,6 @@
 using SimplifiedPaymentsPlatform.Application;
 using SimplifiedPaymentsPlatform.Application.Services.Interface;
+using SimplifiedPaymentsPlatform.Application.Services.Validators.TransferValidator;
 using SimplifiedPaymentsPlatform.Domain.Repositories;
 using SimplifiedPaymentsPlatform.Domain.Services;
 using SimplifiedPaymentsPlatform.Infrastructure.Data;
@@ -47,6 +48,8 @@ builder.Services.AddScoped<IUserDocumentValidator, UserDocumentValidator>();
 
 builder.Services.AddTransient<CommonUserStrategy>();
 builder.Services.AddTransient<SellerUserStrategy>();
+
+builder.Services.AddTransient<ITransferValidator, TransferValidator>();
 
 var app = builder.Build();
 

@@ -26,10 +26,10 @@ public class UserRepository : IUserRepository
         await _context.Users.InsertOneAsync(user);
     }
 
-    public async Task<IEnumerable<User>> GetUsersByIds(params string[] ids)
+    public async Task<IList<User>> GetUsersByIds(params string[] ids)
     {
         var filterDefinition = Builders<User>.Filter.In(u => u.Id, ids);
-        var users = (await _context.Users.FindAsync(filterDefinition)).ToEnumerable();
+        var users = (await _context.Users.FindAsync(filterDefinition)).ToList();
 
         return users;
     }

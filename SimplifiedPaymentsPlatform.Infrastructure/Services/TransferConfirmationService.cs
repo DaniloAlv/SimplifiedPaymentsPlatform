@@ -27,7 +27,7 @@ public class TransferConfirmationService : ITransferConfirmationService
 
         string messageWithTransferValue = response.Message
             .Replace("VALUE", transferValue.ToString("C2", CultureInfo.GetCultureInfo("pt-BR")))
-            .Replace("CREATED_AT", DateTimeOffset.Now.ToString("dd/MM/yyyy hh:mm:ss"));
+            .Replace("CREATED_AT", DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss"));
 
         await _mediator.Publish(new CompletedTransferNotification(messageWithTransferValue));
     }

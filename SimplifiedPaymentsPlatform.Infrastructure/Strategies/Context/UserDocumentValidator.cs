@@ -15,8 +15,8 @@ public class UserDocumentValidator : IUserDocumentValidator
         _serviceProvider = serviceProvider;
         _strategies = new Dictionary<UserType, IDocumentUserStrategy>
         {
-            { UserType.Common, _documentUserStrategy = _serviceProvider.GetRequiredService<CommonUserStrategy>() }, 
-            { UserType.Seller, _documentUserStrategy = _serviceProvider.GetRequiredService<SellerUserStrategy>() }
+            { UserType.Common, _serviceProvider.GetRequiredService<CommonUserStrategy>() }, 
+            { UserType.Seller, _serviceProvider.GetRequiredService<SellerUserStrategy>() }
         };        
     }
 
@@ -27,8 +27,7 @@ public class UserDocumentValidator : IUserDocumentValidator
 
     public IDocumentUserStrategy GetUserStrategy(UserType userType)
     {
-        IDocumentUserStrategy userStrategy;
-        _strategies.TryGetValue(userType, out userStrategy);
+        _strategies.TryGetValue(userType, out IDocumentUserStrategy userStrategy);
         return userStrategy;
     }
 
