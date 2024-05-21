@@ -40,7 +40,7 @@ public class UserController : ControllerBase
         }
         catch(Exception ex)
         {
-            return NotFound();
+            return BadRequest(new {Error = ex.Message});
         }
     }
 }

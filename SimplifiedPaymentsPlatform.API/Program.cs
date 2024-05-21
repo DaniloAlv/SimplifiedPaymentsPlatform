@@ -1,20 +1,20 @@
 using SimplifiedPaymentsPlatform.Application;
 using SimplifiedPaymentsPlatform.Application.Services.Interface;
 using SimplifiedPaymentsPlatform.Domain.Repositories;
+using SimplifiedPaymentsPlatform.Domain.Services;
 using SimplifiedPaymentsPlatform.Infrastructure.Data;
 using SimplifiedPaymentsPlatform.Infrastructure.Repositories;
 using SimplifiedPaymentsPlatform.Infrastructure.Services;
+using SimplifiedPaymentsPlatform.Infrastructure.Strategies;
+using SimplifiedPaymentsPlatform.Infrastructure.Strategies.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<SimplifiedPaymentsDbContext>(provider => 
+builder.Services.AddSingleton(provider => 
 {
     string connectionString = builder.Configuration.GetConnectionString("MongoDB");
     string databaseName = builder.Configuration
@@ -42,6 +42,11 @@ builder.Services.AddHttpClient<ITransferConfirmationService, TransferConfirmatio
     client.BaseAddress = new Uri(transferConfirmationUrl);
     client.Timeout = TimeSpan.FromSeconds(10);
 });
+
+builder.Services.AddScoped<IUserDocumentValidator, UserDocumentValidator>();
+
+builder.Services.AddTransient<CommonUserStrategy>();
+builder.Services.AddTransient<SellerUserStrategy>();
 
 var app = builder.Build();
 
