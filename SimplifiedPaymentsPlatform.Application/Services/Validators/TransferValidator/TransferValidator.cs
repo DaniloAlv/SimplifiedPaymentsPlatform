@@ -5,7 +5,7 @@ using SimplifiedPaymentsPlatform.Domain.Repositories;
 
 namespace SimplifiedPaymentsPlatform.Application.Services.Validators.TransferValidator;
 
-public class TransferValidator : BaseValidator, ITransferValidator
+public class TransferValidator : ITransferValidator
 {
     private readonly IUserRepository _userRepository;
 

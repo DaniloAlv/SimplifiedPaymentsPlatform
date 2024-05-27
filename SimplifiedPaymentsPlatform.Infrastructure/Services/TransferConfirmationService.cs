@@ -12,7 +12,8 @@ public class TransferConfirmationService : ITransferConfirmationService
     private readonly HttpClient _httpClient;
     private readonly IMediator _mediator;
 
-    public TransferConfirmationService(HttpClient httpClient, IMediator mediator)
+    public TransferConfirmationService(HttpClient httpClient,
+                                       IMediator mediator)
     {
         _httpClient = httpClient;
         _mediator = mediator;

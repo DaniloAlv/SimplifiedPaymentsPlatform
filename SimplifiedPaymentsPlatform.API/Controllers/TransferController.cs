@@ -4,9 +4,7 @@ using SimplifiedPaymentsPlatform.Application.Commands;
 
 namespace SimplifiedPaymentsPlatform.API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class TransferController : ControllerBase
+public class TransferController : BaseController
 {
     private readonly IMediator _mediator;
 
@@ -21,11 +19,11 @@ public class TransferController : ControllerBase
         try
         {
             await _mediator.Send(command);
-            return Ok("Transferência realizada com sucesso!");
+            return Ok(new { message = "Transferência realizada com sucesso!"});
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return BadRequest("Algo deu errado.");
+            return BadRequestResponse(ex.Message);
         }
     }
 }

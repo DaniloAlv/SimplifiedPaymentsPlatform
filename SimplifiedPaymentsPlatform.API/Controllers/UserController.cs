@@ -4,9 +4,7 @@ using SimplifiedPaymentsPlatform.Application.Commands;
 
 namespace SimplifiedPaymentsPlatform.API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class UserController : ControllerBase
+public class UserController : BaseController
 {
     private readonly IMediator _mediatr;
 
@@ -22,11 +20,11 @@ public class UserController : ControllerBase
         {
             var command = new UserByIdCommand(id);
             var userResponse = await _mediatr.Send(command);
-            return Ok(userResponse);
+            return OkResponse(userResponse);
         }
         catch(Exception ex)
         {
-            return NotFound();
+            return NotFoundResponse(ex.Message);
         }
     }
 
@@ -36,11 +34,11 @@ public class UserController : ControllerBase
         try
         {
             var userResponse = await _mediatr.Send(command);
-            return Created(nameof(GetById), userResponse);
+            return CreatedObjectResponse(nameof(GetById), userResponse);
         }
         catch(Exception ex)
         {
-            return BadRequest(new {Error = ex.Message});
+            return BadRequestResponse(ex.Message);
         }
     }
 }
