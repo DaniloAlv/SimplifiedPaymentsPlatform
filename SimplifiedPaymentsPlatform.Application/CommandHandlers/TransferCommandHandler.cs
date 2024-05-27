@@ -40,20 +40,22 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand>
 
         try
         {
-            await _transferValidator.CheckTransferIsValid(request);
-
-            await TransferBetweenAccounts(session, request);
-
-            var authorizeTransfer = await _transferValidationService.Authorize();
-
-            if (!authorizeTransfer.Authorized)
-                throw new Exception("Transferência não autorizada");
-
             var transfer = request.CommandToTransfer();
-            await _transferRepository.CreateWithTransactionAsync(session, transfer);
 
-            await session.CommitTransactionAsync(cancellationToken);
-            await _transferConfirmationService.Confirmation(request.Value);
+            await Task.WhenAll(
+                
+                _transferValidator.CheckTransferIsValid(request),
+
+                TransferBetweenAccounts(session, request),
+
+                _transferValidationService.Authorize(),
+
+                _transferRepository.CreateWithTransactionAsync(session, transfer),
+
+                session.CommitTransactionAsync(cancellationToken),
+
+                _transferConfirmationService.Confirmation(request.Value)
+            );
         }
         catch (MongoWriteException ex)
         {

@@ -13,8 +13,5 @@ public class TransferValidationService : ITransferValidationService
         _httpClient = httpClient;
     }
 
-    public async Task<AuthorizedTransferResponse?> Authorize()
-    {
-        return await _httpClient.GetFromJsonAsync<AuthorizedTransferResponse>("");
-    }
+    public async Task Authorize() => await _httpClient.GetFromJsonAsync<AuthorizedTransferResponse>("");
 }
