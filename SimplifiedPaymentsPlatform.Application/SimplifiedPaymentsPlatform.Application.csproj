@@ -4,6 +4,10 @@
     <ProjectReference Include="..\SimplifiedPaymentsPlatform.Domain\SimplifiedPaymentsPlatform.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Mediatr" Version="12.2.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

@@ -1,0 +1,3 @@
+namespace SimplifiedPaymentsPlatform.Application;
+
+public class ApplicationAssemblyReference{}
