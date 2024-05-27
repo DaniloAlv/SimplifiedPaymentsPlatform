@@ -13,5 +13,10 @@ public class TransferValidationService : ITransferValidationService
         _httpClient = httpClient;
     }
 
-    public async Task Authorize() => await _httpClient.GetFromJsonAsync<AuthorizedTransferResponse>("");
+    public async Task Authorize()
+    {
+        var transfer = await _httpClient.GetFromJsonAsync<AuthorizedTransferResponse>("");
+
+        if (!transfer.Authorized) throw new InvalidOperationException("Transação não autorizada!");
+    } 
 }
